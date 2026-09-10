@@ -4,7 +4,8 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;background:radial-gradient(circle at top,#383e72,#12131f 70%);font-family:system-ui,"Noto Sans KR",sans-serif;color:#fff}
 .machine{width:min(94vw,720px);padding:30px;border-radius:28px;background:linear-gradient(145deg,#292d50,#171927);box-shadow:0 25px 70px #0008}
 h1{margin:0 0 7px;text-align:center;font-size:30px}.sub{text-align:center;color:#b9bdd8;margin-bottom:22px}
-.slot{height:125px;display:flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:18px;background:#080912;border:3px solid #6269b0;box-shadow:inset 0 0 30px #000,0 0 25px #5962c044;font-size:clamp(25px,6vw,45px);font-weight:800;word-break:keep-all;text-align:center}
+.slot{height:125px;display:flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:18px;background:#080912;border:3px solid #6269b0;box-shadow:inset 0 0 30px #000,0 0 25px #5962c044;font-size:clamp(25px,6vw,45px);font-weight:800;word-break:keep-all;text-align:center;transition:transform .18s ease,opacity .18s ease}
+.slot.tick{transform:scale(.97);opacity:.72}
 button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer;color:#fff;background:#636bd0}button:disabled{opacity:.5}
 .spin{display:block;margin:20px auto 14px;border-radius:999px;padding:15px 42px;font-size:20px;background:linear-gradient(135deg,#777fff,#a35cff)}
 .panel{margin-top:22px;padding:18px;border-radius:18px;background:#0e1020aa;border:1px solid #fff2}.panel h2{font-size:18px;margin:0 0 12px}
@@ -33,6 +34,9 @@ input.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById(
 document.getElementById("bulkBtn").onclick=()=>{bulk.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean).forEach(addName);bulk.value="";save()};
 document.getElementById("resetBtn").onclick=()=>{names=[];save();slot.textContent="???";result.textContent=""};
 function pick(){return names[Math.floor(Math.random()*names.length)]}
-spin.onclick=()=>{if(!names.length){result.textContent="이름을 한 명 이상 추가해주세요.";return}spin.disabled=true;result.textContent="";slot.classList.remove("win");let i=0;const timer=setInterval(()=>{slot.textContent=pick();i++;if(i>=30){clearInterval(timer);const w=pick();slot.textContent=w;slot.classList.add("win");result.textContent="🎉 당첨자는 「"+w+"」 입니다!";spin.disabled=false}},70)};
+function showTick(name){slot.classList.remove("win");slot.classList.add("tick");setTimeout(()=>{slot.textContent=name;slot.classList.remove("tick")},70)}
+function finishSpin(){const winner=pick();slot.textContent=winner;slot.classList.remove("tick");slot.classList.add("win");result.textContent="🎉 당첨자는 「"+winner+"」 입니다!";spin.disabled=false}
+function suspenseStep(step,total){if(step>=total){finishSpin();return}showTick(pick());const progress=(step+1)/total;const delay=170+Math.pow(progress,2.2)*760+Math.floor(Math.random()*90);setTimeout(()=>suspenseStep(step+1,total),delay)}
+spin.onclick=()=>{if(!names.length){result.textContent="이름을 한 명 이상 추가해주세요.";return}spin.disabled=true;result.textContent="";slot.classList.remove("win");let fastCount=18+Math.floor(Math.random()*9),i=0;const fast=setInterval(()=>{slot.textContent=pick();i++;if(i>=fastCount){clearInterval(fast);const extraSteps=4+Math.floor(Math.random()*6);setTimeout(()=>suspenseStep(0,extraSteps),120)}},65)};
 render();
 </script></body></html>
