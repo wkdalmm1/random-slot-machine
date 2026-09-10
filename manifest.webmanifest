@@ -1,0 +1,15 @@
+{
+  "name": "커스텀 랜덤 슬롯머신",
+  "short_name": "랜덤 슬롯",
+  "description": "이름을 추가하고 공정하게 무작위 추첨하는 커스텀 랜덤 슬롯머신",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12131f",
+  "theme_color": "#292d50",
+  "icons": [
+    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
