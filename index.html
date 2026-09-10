@@ -4,8 +4,12 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;background:radial-gradient(circle at top,#383e72,#12131f 70%);font-family:system-ui,"Noto Sans KR",sans-serif;color:#fff}
 .machine{width:min(94vw,720px);padding:30px;border-radius:28px;background:linear-gradient(145deg,#292d50,#171927);box-shadow:0 25px 70px #0008}
 h1{margin:0 0 7px;text-align:center;font-size:30px}.sub{text-align:center;color:#b9bdd8;margin-bottom:22px}
-.slot{height:125px;display:flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:18px;background:#080912;border:3px solid #6269b0;box-shadow:inset 0 0 30px #000,0 0 25px #5962c044;font-size:clamp(25px,6vw,45px);font-weight:800;word-break:keep-all;text-align:center;transition:transform .18s ease,opacity .18s ease}
-.slot.tick{transform:scale(.97);opacity:.72}
+.slot{position:relative;height:150px;overflow:hidden;border-radius:18px;background:#080912;border:3px solid #6269b0;box-shadow:inset 0 0 30px #000,0 0 25px #5962c044}
+.slot:before,.slot:after{content:"";position:absolute;left:0;right:0;height:42px;z-index:3;pointer-events:none}.slot:before{top:0;background:linear-gradient(#080912,transparent)}.slot:after{bottom:0;background:linear-gradient(transparent,#080912)}
+.center-line{position:absolute;left:10px;right:10px;top:50%;height:58px;transform:translateY(-50%);border-top:1px solid #ffffff33;border-bottom:1px solid #ffffff33;z-index:2;pointer-events:none}
+.reel{position:absolute;left:0;right:0;top:0;will-change:transform;transform:translateY(-58px)}
+.reel-item{height:58px;display:flex;align-items:center;justify-content:center;padding:0 18px;font-size:clamp(23px,6vw,42px);font-weight:800;word-break:keep-all;text-align:center;color:#9ba0c4;filter:blur(.4px)}
+.reel-item.active{color:#fff;filter:none;text-shadow:0 0 16px #8e96ff88}
 button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer;color:#fff;background:#636bd0}button:disabled{opacity:.5}
 .spin{display:block;margin:20px auto 14px;border-radius:999px;padding:15px 42px;font-size:20px;background:linear-gradient(135deg,#777fff,#a35cff)}
 .panel{margin-top:22px;padding:18px;border-radius:18px;background:#0e1020aa;border:1px solid #fff2}.panel h2{font-size:18px;margin:0 0 12px}
@@ -14,29 +18,27 @@ textarea{width:100%;height:75px;resize:vertical;margin-top:10px;padding:12px;bor
 .small{font-size:13px;color:#aeb2ce;margin-top:8px}.list{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;max-height:180px;overflow:auto}
 .tag{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#30345a;font-size:14px}.x{padding:2px 7px;border-radius:50%;background:#555b82;font-size:12px}
 .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.result{text-align:center;min-height:24px;color:#d8d9f0}
-.win{animation:pop .55s ease}@keyframes pop{0%{transform:scale(.7);opacity:.2}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.winflash{animation:flash .7s ease}@keyframes flash{0%{box-shadow:inset 0 0 30px #000,0 0 10px #5962c044}45%{box-shadow:inset 0 0 30px #000,0 0 38px #9c84ffcc}100%{box-shadow:inset 0 0 30px #000,0 0 25px #5962c044}}
 </style></head><body><div class="machine">
 <h1>🎰 커스텀 랜덤 슬롯머신</h1><div class="sub">이름을 자유롭게 추가·삭제할 수 있습니다.</div>
-<div id="slot" class="slot">???</div><button id="spin" class="spin">🎲 돌리기!</button><div id="result" class="result"></div>
+<div id="slot" class="slot"><div class="center-line"></div><div id="reel" class="reel"></div></div><button id="spin" class="spin">🎲 돌리기!</button><div id="result" class="result"></div>
 <div class="panel"><h2>➕ 이름 추가</h2><div class="add"><input id="nameInput" placeholder="추가할 이름 입력"><button id="addBtn">추가</button></div>
 <textarea id="bulkInput" placeholder="여러 명을 한 번에 추가하려면 이름을 줄바꿈해서 입력하세요."></textarea>
 <div class="actions"><button id="bulkBtn">여러 명 추가</button><button id="resetBtn">명단 비우기</button></div>
 <div id="count" class="small"></div><div id="list" class="list"></div></div></div>
 <script>
-const defaults=[], slot=document.getElementById("slot"), spin=document.getElementById("spin"), result=document.getElementById("result"), input=document.getElementById("nameInput"), bulk=document.getElementById("bulkInput"), listEl=document.getElementById("list"), countEl=document.getElementById("count");
-const saved=localStorage.getItem("slotNames");
-let names=saved===null?[...defaults]:JSON.parse(saved);
-function save(){localStorage.setItem("slotNames",JSON.stringify(names));render()}
-function render(){countEl.textContent="현재 "+names.length+"명";listEl.innerHTML="";names.forEach((n,i)=>{const tag=document.createElement("div");tag.className="tag";tag.textContent=n;const x=document.createElement("button");x.className="x";x.textContent="×";x.onclick=()=>{names.splice(i,1);save()};tag.appendChild(x);listEl.appendChild(tag)})}
+const defaults=[], slot=document.getElementById("slot"), reel=document.getElementById("reel"), spin=document.getElementById("spin"), result=document.getElementById("result"), input=document.getElementById("nameInput"), bulk=document.getElementById("bulkInput"), listEl=document.getElementById("list"), countEl=document.getElementById("count");
+const saved=localStorage.getItem("slotNames");let names=saved===null?[...defaults]:JSON.parse(saved);let currentIndex=0,isSpinning=false;const H=58;
+function save(){localStorage.setItem("slotNames",JSON.stringify(names));renderList();if(!isSpinning)drawIdle()}
+function renderList(){countEl.textContent="현재 "+names.length+"명";listEl.innerHTML="";names.forEach((n,i)=>{const tag=document.createElement("div");tag.className="tag";tag.textContent=n;const x=document.createElement("button");x.className="x";x.textContent="×";x.onclick=()=>{names.splice(i,1);if(currentIndex>=names.length)currentIndex=0;save()};tag.appendChild(x);listEl.appendChild(tag)})}
 function addName(n){n=n.trim();if(n&&!names.includes(n))names.push(n)}
-document.getElementById("addBtn").onclick=()=>{addName(input.value);input.value="";save();input.focus()};
-input.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("addBtn").click()});
+document.getElementById("addBtn").onclick=()=>{addName(input.value);input.value="";save();input.focus()};input.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("addBtn").click()});
 document.getElementById("bulkBtn").onclick=()=>{bulk.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean).forEach(addName);bulk.value="";save()};
-document.getElementById("resetBtn").onclick=()=>{names=[];save();slot.textContent="???";result.textContent=""};
-function pick(){return names[Math.floor(Math.random()*names.length)]}
-function showTick(name){slot.classList.remove("win");slot.classList.add("tick");setTimeout(()=>{slot.textContent=name;slot.classList.remove("tick")},70)}
-function finishSpin(){const winner=pick();slot.textContent=winner;slot.classList.remove("tick");slot.classList.add("win");result.textContent="🎉 당첨자는 「"+winner+"」 입니다!";spin.disabled=false}
-function suspenseStep(step,total){if(step>=total){finishSpin();return}showTick(pick());const progress=(step+1)/total;const delay=170+Math.pow(progress,2.2)*760+Math.floor(Math.random()*90);setTimeout(()=>suspenseStep(step+1,total),delay)}
-spin.onclick=()=>{if(!names.length){result.textContent="이름을 한 명 이상 추가해주세요.";return}spin.disabled=true;result.textContent="";slot.classList.remove("win");let fastCount=18+Math.floor(Math.random()*9),i=0;const fast=setInterval(()=>{slot.textContent=pick();i++;if(i>=fastCount){clearInterval(fast);const extraSteps=4+Math.floor(Math.random()*6);setTimeout(()=>suspenseStep(0,extraSteps),120)}},65)};
-render();
+document.getElementById("resetBtn").onclick=()=>{names=[];currentIndex=0;save();result.textContent=""};
+function nameAt(i){if(!names.length)return "???";return names[(i%names.length+names.length)%names.length]}
+function makeItem(text,active=false){const d=document.createElement("div");d.className="reel-item"+(active?" active":"");d.textContent=text;return d}
+function drawIdle(){reel.style.transition="none";reel.style.transform=`translateY(-${H}px)`;reel.innerHTML="";if(!names.length){reel.append(makeItem(""));reel.append(makeItem("???",true));reel.append(makeItem(""));return}reel.append(makeItem(nameAt(currentIndex-1)));reel.append(makeItem(nameAt(currentIndex),true));reel.append(makeItem(nameAt(currentIndex+1)))}
+function stepOnce(duration,easing){return new Promise(resolve=>{const next=currentIndex+1;reel.innerHTML="";reel.append(makeItem(nameAt(currentIndex-1)));reel.append(makeItem(nameAt(currentIndex),true));reel.append(makeItem(nameAt(next)));reel.append(makeItem(nameAt(next+1)));reel.style.transition="none";reel.style.transform=`translateY(-${H}px)`;requestAnimationFrame(()=>requestAnimationFrame(()=>{reel.style.transition=`transform ${duration}ms ${easing}`;reel.style.transform=`translateY(-${H*2}px)`;setTimeout(()=>{currentIndex=next%names.length;drawIdle();resolve()},duration+12)}))})}
+async function runSpin(){if(!names.length){result.textContent="이름을 한 명 이상 추가해주세요.";return}if(isSpinning)return;isSpinning=true;spin.disabled=true;result.textContent="";slot.classList.remove("winflash");const fastSteps=22+Math.floor(Math.random()*10);for(let i=0;i<fastSteps;i++)await stepOnce(58,"linear");const suspense=5+Math.floor(Math.random()*6);for(let i=0;i<suspense;i++){const p=(i+1)/suspense;const d=Math.round(120+Math.pow(p,2.15)*720+Math.random()*80);await stepOnce(d,"cubic-bezier(.18,.72,.22,1)")}const winner=nameAt(currentIndex);slot.classList.add("winflash");result.textContent="🎉 당첨자는 「"+winner+"」 입니다!";spin.disabled=false;isSpinning=false}
+spin.onclick=runSpin;renderList();drawIdle();
 </script></body></html>
