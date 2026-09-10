@@ -19,18 +19,19 @@ textarea{width:100%;height:75px;resize:vertical;margin-top:10px;padding:12px;bor
 <div id="slot" class="slot">???</div><button id="spin" class="spin">🎲 돌리기!</button><div id="result" class="result"></div>
 <div class="panel"><h2>➕ 이름 추가</h2><div class="add"><input id="nameInput" placeholder="추가할 이름 입력"><button id="addBtn">추가</button></div>
 <textarea id="bulkInput" placeholder="여러 명을 한 번에 추가하려면 이름을 줄바꿈해서 입력하세요."></textarea>
-<div class="actions"><button id="bulkBtn">여러 명 추가</button><button id="resetBtn">기본 명단으로 초기화</button></div>
+<div class="actions"><button id="bulkBtn">여러 명 추가</button><button id="resetBtn">명단 비우기</button></div>
 <div id="count" class="small"></div><div id="list" class="list"></div></div></div>
 <script>
-const defaults=["순수의정상화", "GH", "welsh9731", "문", "yak1230", "릿지", "요구르티나", "헬리냥", "Coolpeace", "레브즈", "피넛11", "햄햄팡팡", "강연금복각기원", "LastAstrum", "묘라운브이", "프로이드", "PK", "오고곡라떼", "망버지의은혜", "bang", "여름그림자", "고스트매니악", "추울땐호빵"], slot=document.getElementById("slot"), spin=document.getElementById("spin"), result=document.getElementById("result"), input=document.getElementById("nameInput"), bulk=document.getElementById("bulkInput"), listEl=document.getElementById("list"), countEl=document.getElementById("count");
-let names=JSON.parse(localStorage.getItem("slotNames")||"null")||[...defaults];
+const defaults=[], slot=document.getElementById("slot"), spin=document.getElementById("spin"), result=document.getElementById("result"), input=document.getElementById("nameInput"), bulk=document.getElementById("bulkInput"), listEl=document.getElementById("list"), countEl=document.getElementById("count");
+const saved=localStorage.getItem("slotNames");
+let names=saved===null?[...defaults]:JSON.parse(saved);
 function save(){localStorage.setItem("slotNames",JSON.stringify(names));render()}
 function render(){countEl.textContent="현재 "+names.length+"명";listEl.innerHTML="";names.forEach((n,i)=>{const tag=document.createElement("div");tag.className="tag";tag.textContent=n;const x=document.createElement("button");x.className="x";x.textContent="×";x.onclick=()=>{names.splice(i,1);save()};tag.appendChild(x);listEl.appendChild(tag)})}
 function addName(n){n=n.trim();if(n&&!names.includes(n))names.push(n)}
 document.getElementById("addBtn").onclick=()=>{addName(input.value);input.value="";save();input.focus()};
 input.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("addBtn").click()});
 document.getElementById("bulkBtn").onclick=()=>{bulk.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean).forEach(addName);bulk.value="";save()};
-document.getElementById("resetBtn").onclick=()=>{names=[...defaults];save();slot.textContent="???";result.textContent=""};
+document.getElementById("resetBtn").onclick=()=>{names=[];save();slot.textContent="???";result.textContent=""};
 function pick(){return names[Math.floor(Math.random()*names.length)]}
 spin.onclick=()=>{if(!names.length){result.textContent="이름을 한 명 이상 추가해주세요.";return}spin.disabled=true;result.textContent="";slot.classList.remove("win");let i=0;const timer=setInterval(()=>{slot.textContent=pick();i++;if(i>=30){clearInterval(timer);const w=pick();slot.textContent=w;slot.classList.add("win");result.textContent="🎉 당첨자는 「"+w+"」 입니다!";spin.disabled=false}},70)};
 render();
